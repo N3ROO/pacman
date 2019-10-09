@@ -60,8 +60,8 @@ def breadthFirstSearch(problem):
     Search the shallowest nodes in the search tree first. [p 81]
     """
 
-    # For explainations, look at DFS code, it is the same algorithm but we don't
-    # pop nodes in the same order
+    # For explainations, look at DFS code, it is the same algorithm but we
+    # don't pop nodes in the same order
     queue = Queue()
     visited = []
 
