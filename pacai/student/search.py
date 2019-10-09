@@ -5,6 +5,7 @@ Pacman agents.
 
 from pacai.util.stack import Stack
 from pacai.util.queue import Queue
+from pacai.util.priorityQueue import PriorityQueue
 
 
 def depthFirstSearch(problem):
@@ -105,5 +106,42 @@ def aStarSearch(problem, heuristic):
     Search the node that has the lowest combined cost and heuristic first.
     """
 
-    # *** Your Code Here ***
-    raise NotImplementedError()
+    # The algorithm looks like DFS and BFS, the major difference is that we pop
+    # nodes according to their cost. We will take the cheaper at each iteration
+    # good heuristic = good results!
+
+    pqueue = PriorityQueue()
+    visited = []
+
+    pqueue.push(
+        (
+            problem.startingState(),
+            [],
+            0
+        ),
+        heuristic(problem.startingState(), problem)
+    )
+
+    while not pqueue.isEmpty():
+        position, path, cost = pqueue.pop()
+
+        if problem.isGoal(position):
+            return path
+
+        if position in visited:
+            continue
+
+        visited.append(position)
+
+        successors = problem.successorStates(position)
+        for successor in successors:
+            pqueue.push(
+                (
+                    successor[0],
+                    path + [successor[1]],
+                    successor[2]
+                ),
+                cost + heuristic(successor[0], problem)
+            )
+
+    return []
