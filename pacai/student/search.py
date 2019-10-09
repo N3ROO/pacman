@@ -97,8 +97,44 @@ def uniformCostSearch(problem):
     Search the node of least total cost first.
     """
 
-    # *** Your Code Here ***
-    raise NotImplementedError()
+    # The algorithm looks like DFS and BFS, the major difference is that we pop
+    # nodes according to their cost. We will take the cheaper at each iteration
+
+    pqueue = PriorityQueue()
+    visited = []
+
+    pqueue.push(
+        (
+            problem.startingState(),
+            [],
+            0
+        ),
+        0
+    )
+
+    while not pqueue.isEmpty():
+        position, path, cost = pqueue.pop()
+
+        if problem.isGoal(position):
+            return path
+
+        if position in visited:
+            continue
+
+        visited.append(position)
+
+        successors = problem.successorStates(position)
+        for successor in successors:
+            pqueue.push(
+                (
+                    successor[0],
+                    path + [successor[1]],
+                    successor[2]
+                ),
+                successor[0]
+            )
+
+    return []
 
 
 def aStarSearch(problem, heuristic):
@@ -106,8 +142,7 @@ def aStarSearch(problem, heuristic):
     Search the node that has the lowest combined cost and heuristic first.
     """
 
-    # The algorithm looks like DFS and BFS, the major difference is that we pop
-    # nodes according to their cost. We will take the cheaper at each iteration
+    # It is an improvement of UCS by taking in account heuristics.
     # good heuristic = good results!
 
     pqueue = PriorityQueue()
