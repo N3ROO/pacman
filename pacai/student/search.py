@@ -4,6 +4,7 @@ Pacman agents.
 """
 
 from pacai.util.stack import Stack
+from pacai.util.queue import Queue
 
 
 def depthFirstSearch(problem):
@@ -59,8 +60,35 @@ def breadthFirstSearch(problem):
     Search the shallowest nodes in the search tree first. [p 81]
     """
 
-    # *** Your Code Here ***
-    raise NotImplementedError()
+    # For explainations, look at DFS code, it is the same algorithm but we don't
+    # pop nodes in the same order
+    queue = Queue()
+    visited = []
+
+    queue.push((problem.startingState(), [], 0))
+
+    while not queue.isEmpty():
+        position, path, cost = queue.pop()
+
+        if problem.isGoal(position):
+            return path
+
+        if position in visited:
+            continue
+
+        visited.append(position)
+
+        successors = problem.successorStates(position)
+        for successor in successors:
+            queue.push(
+                (
+                    successor[0],
+                    path + [successor[1]],
+                    successor[2]
+                )
+            )
+
+    return []
 
 
 def uniformCostSearch(problem):
