@@ -174,7 +174,7 @@ def aStarSearch(problem, heuristic):
                 (
                     successor[0],
                     path + [successor[1]],
-                    successor[2]
+                    cost + successor[2]
                 ),
                 cost + heuristic(successor[0], problem)
             )
