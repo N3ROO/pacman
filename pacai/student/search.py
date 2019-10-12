@@ -29,21 +29,21 @@ def depthFirstSearch(problem):
     stack.push((problem.startingState(), [], 0))
 
     while not stack.isEmpty():
-        position, path, cost = stack.pop()
+        state, path, cost = stack.pop()
 
-        if problem.isGoal(position):
+        if problem.isGoal(state):
             return path
 
-        if position in visited:
+        if state in visited:
             continue
 
-        visited.append(position)
+        visited.append(state)
 
-        successors = problem.successorStates(position)
+        successors = problem.successorStates(state)
         for successor in successors:
             # We keep track of the path for each node here by adding their
             # direction to the current node's path. A successor is a tuple
-            # (position, direction, cost)
+            # (state, direction, cost)
             stack.push(
                 (
                     successor[0],
@@ -53,7 +53,7 @@ def depthFirstSearch(problem):
             )
 
     # No path found!
-    return []
+    return None
 
 
 def breadthFirstSearch(problem):
@@ -113,17 +113,17 @@ def uniformCostSearch(problem):
     )
 
     while not pqueue.isEmpty():
-        position, path, cost = pqueue.pop()
+        state, path, cost = pqueue.pop()
 
-        if problem.isGoal(position):
+        if problem.isGoal(state):
             return path
 
-        if position in visited:
+        if state in visited:
             continue
 
-        visited.append(position)
+        visited.append(state)
 
-        successors = problem.successorStates(position)
+        successors = problem.successorStates(state)
         for successor in successors:
             pqueue.push(
                 (
@@ -134,7 +134,7 @@ def uniformCostSearch(problem):
                 successor[0]
             )
 
-    return []
+    return None
 
 
 def aStarSearch(problem, heuristic):
@@ -158,17 +158,17 @@ def aStarSearch(problem, heuristic):
     )
 
     while not pqueue.isEmpty():
-        position, path, cost = pqueue.pop()
+        state, path, cost = pqueue.pop()
 
-        if problem.isGoal(position):
+        if problem.isGoal(state):
             return path
 
-        if position in visited:
+        if state in visited:
             continue
 
-        visited.append(position)
+        visited.append(state)
 
-        successors = problem.successorStates(position)
+        successors = problem.successorStates(state)
         for successor in successors:
             pqueue.push(
                 (
@@ -179,4 +179,4 @@ def aStarSearch(problem, heuristic):
                 cost + heuristic(successor[0], problem)
             )
 
-    return []
+    return None
