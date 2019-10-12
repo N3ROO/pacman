@@ -14,6 +14,7 @@ from pacai.core.search.problem import SearchProblem
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.base import SearchAgent
 from pacai.core.directions import Directions
+from pacai.core import distance
 
 class CornersProblem(SearchProblem):
     """
@@ -177,8 +178,36 @@ def cornersHeuristic(state, problem):
     # corners = problem.corners  # These are the corner coordinates
     # walls = problem.walls  # These are the walls of the maze, as a Grid.
 
-    # *** Your Code Here ***
-    return heuristic.null(state, problem)  # Default to trivial solution
+    # Actually, we could just follow the walls
+    # position = state[0]
+
+    # neighboors = []
+
+    # for i in range(-1, 2):
+    #     for j in range(-1, 2):
+    #         if i == j == 0:
+    #             continue
+    #         neighboors.append(problem.walls[i + position[0]][j + position[1]])
+
+    # return neighboors.count(False)
+
+    # We will get a tuple telling us which corner has already been visited: (T/F, T/F, T/F, T/F)
+    # With: (bottom left, top left, bottom right, top right)
+    cornersStatus = state[1:5]
+    closestCorner = None
+    maxDistance = -1
+    for index, cornerStatus in enumerate(cornersStatus):
+        if not cornerStatus:  # if not visited yet
+            dist = distance.manhattan(state[0], problem.corners[index])
+            corner = problem.corners[index]
+            if closestCorner is None or dist >= maxDistance:
+                closestCorner = corner
+                maxDistance = dist
+
+    # wtf, we should actually return the minDistance, but it works better with maxDistance (1048 vs 2800)
+    # WHY WON'T THE MINDISTANCE WORK, WHY??
+    return maxDistance
+
 
 def foodHeuristic(state, problem):
     """
