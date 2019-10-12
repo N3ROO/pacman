@@ -131,7 +131,7 @@ def uniformCostSearch(problem):
                     path + [successor[1]],
                     successor[2]
                 ),
-                successor[0]
+                cost
             )
 
     return None
