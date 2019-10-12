@@ -15,6 +15,7 @@ from pacai.agents.base import BaseAgent
 from pacai.agents.search.base import SearchAgent
 from pacai.core.directions import Directions
 from pacai.core import distance
+import math
 
 class CornersProblem(SearchProblem):
     """
@@ -194,19 +195,14 @@ def cornersHeuristic(state, problem):
     # We will get a tuple telling us which corner has already been visited: (T/F, T/F, T/F, T/F)
     # With: (bottom left, top left, bottom right, top right)
     cornersStatus = state[1:5]
-    closestCorner = None
-    maxDistance = -1
+    minDistance = 9999999999999999999
     for index, cornerStatus in enumerate(cornersStatus):
         if not cornerStatus:  # if not visited yet
             dist = distance.manhattan(state[0], problem.corners[index])
-            corner = problem.corners[index]
-            if closestCorner is None or dist >= maxDistance:
-                closestCorner = corner
-                maxDistance = dist
+            if dist < minDistance:
+                minDistance = dist
 
-    # wtf, we should actually return the minDistance, but it works better with maxDistance (1048 vs 2800)
-    # WHY WON'T THE MINDISTANCE WORK, WHY??
-    return maxDistance
+    return minDistance
 
 
 def foodHeuristic(state, problem):
