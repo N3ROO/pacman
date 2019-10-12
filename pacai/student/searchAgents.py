@@ -13,6 +13,7 @@ from pacai.core.search.position import PositionSearchProblem
 from pacai.core.search.problem import SearchProblem
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.base import SearchAgent
+from pacai.core.directions import Directions
 
 class CornersProblem(SearchProblem):
     """
@@ -63,8 +64,85 @@ class CornersProblem(SearchProblem):
             if not startingGameState.hasFood(*corner):
                 logging.warning('Warning: no food in corner ' + str(corner))
 
-        # *** Your Code Here ***
-        raise NotImplementedError()
+    def startingState(self):
+        """
+        Answers the question:
+        Where should the search start?
+
+        note: Returns the start state (in your search space,
+            NOT a `pacai.core.gamestate.AbstractGameState`)
+
+        Returns the starting state for the search problem.
+        """
+
+        return (self.startingPosition,) + (False, False, False, False)
+
+    def isGoal(self, state):
+        """
+        Answers the question:
+        Is this state a goal?
+
+        note: Returns whether this search state is a goal state of the problem
+
+        Returns True if and only if the state is a valid goal state.
+        """
+
+        # Register the locations we have visited.
+        # This allows the GUI to highlight them.
+        self._visitedLocations.add(state[0])
+        self._visitHistory.append(state[0])
+
+        return state[1:5] == (True, True, True, True)
+
+    def successorStates(self, state):
+        """
+        Answers the question:
+        What moves are possible from this state?
+
+        note: Returns successor states, the actions they require, and a cost of 1.
+            The following code snippet may prove useful
+
+        Returns a list of tuples with three values:
+        (successor state, action, cost of taking the action).
+        """
+
+        successors = []
+
+        for action in Directions.CARDINAL:
+            # bl = bottom left corner
+            # tl = top left corner
+            # br = bottom right corner
+            # tr = top right corner
+            pos, bl, tl, br, tr = state
+            x, y = pos
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
+
+            if (not hitsWall):
+                newState = (
+                        (nextx, nexty),
+                        (x, y) == self.corners[0] or state[1],  # bl
+                        (x, y) == self.corners[1] or state[2],  # tl
+                        (x, y) == self.corners[2] or state[3],  # br
+                        (x, y) == self.corners[3] or state[4]   # tr
+                    )
+
+                successors.append(
+                    (
+                        newState,
+                        action,
+                        1
+                    )
+                )
+
+        # Bookkeeping for display purposes (the highlight in the GUI).
+        self._numExpanded += 1
+        if (state not in self._visitedLocations):
+            self._visitedLocations.add(state[0])
+            self._visitHistory.append(state[0])
+
+        return successors
 
     def actionsCost(self, actions):
         """

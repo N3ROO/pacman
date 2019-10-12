@@ -69,17 +69,17 @@ def breadthFirstSearch(problem):
     queue.push((problem.startingState(), [], 0))
 
     while not queue.isEmpty():
-        position, path, cost = queue.pop()
+        state, path, cost = queue.pop()
 
-        if problem.isGoal(position):
+        if problem.isGoal(state):
             return path
 
-        if position in visited:
+        if state in visited:
             continue
 
-        visited.append(position)
+        visited.append(state)
 
-        successors = problem.successorStates(position)
+        successors = problem.successorStates(state)
         for successor in successors:
             queue.push(
                 (
@@ -89,7 +89,7 @@ def breadthFirstSearch(problem):
                 )
             )
 
-    return []
+    return None
 
 
 def uniformCostSearch(problem):
