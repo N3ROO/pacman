@@ -16,6 +16,7 @@ from pacai.agents.base import BaseAgent
 from pacai.agents.search.base import SearchAgent
 from pacai.core.directions import Directions
 from pacai.core import distance
+from pacai.core.distanceCalculator import Distancer
 
 
 class CornersProblem(SearchProblem):
@@ -119,7 +120,7 @@ class CornersProblem(SearchProblem):
             # tl = top left corner
             # br = bottom right corner
             # tr = top right corner
-            pos, bl, tl, br, tr = state
+            pos, blVisited, tlVisited, brVisited, trVisited = state
             x, y = pos
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
@@ -127,10 +128,10 @@ class CornersProblem(SearchProblem):
 
             if (not hitsWall):
                 newState = ((nextx, nexty),
-                            (nextx, nexty) == self.corners[0] or state[1],
-                            (nextx, nexty) == self.corners[1] or state[2],
-                            (nextx, nexty) == self.corners[2] or state[3],
-                            (nextx, nexty) == self.corners[3] or state[4])
+                            (nextx, nexty) == self.corners[0] or blVisited,
+                            (nextx, nexty) == self.corners[1] or tlVisited,
+                            (nextx, nexty) == self.corners[2] or brVisited,
+                            (nextx, nexty) == self.corners[3] or trVisited)
 
                 successors.append(
                     (
@@ -284,8 +285,44 @@ def foodHeuristic(state, problem):
 
     position, foodGrid = state
 
-    # *** Your Code Here ***
-    return heuristic.null(state, problem)  # Default to the null heuristic.
+    # ---------
+    # First try: we find the two furthest fruits, because we will need to get them anyway.
+    # Then, we need to get one of those two. We will obviously take the closest one. Then
+    # It should be working very well because we will take the food in order. However, it
+    # may not be optimal when we will get to eat the first food.
+    # Result: 7537 nodes -> 3/4
+    # ---------
+
+    # Used to get the real distance (not manhattan or euclidian)
+    distancer = Distancer(problem)
+    foodList = foodGrid.asList()
+
+    # In case if there is only one food remaining, we don't need to find the furthers ones
+    if len(foodList) == 1:
+        return distancer.getDistance(position, foodList[0])
+    # If there are no more foods, we can't calculate the heuristic
+    elif len(foodList) == 0:
+        return 0
+
+    # We compare every food to every other food to retrieve the ones that are the most spaced
+    furtherFood1, furtherFood2 = foodList[0], foodList[1]
+    distBetweenFurtherFoods = distancer.getDistance(furtherFood1, furtherFood2)
+    i, j = 0, 0
+    while i < len(foodList):
+        j = i + 1
+        while j < len(foodList):
+            dist = distancer.getDistance(foodList[i], foodList[j])
+            if dist > distBetweenFurtherFoods:
+                distBetweenFurtherFoods = dist
+                furtherFood1, furtherFood2 = foodList[i], foodList[j]
+            j += 1
+        i += 1
+
+    # Now we find the distance from current Pacman position to the closer of previous two fruits
+    dist1 = distancer.getDistance(position, furtherFood1)
+    dist2 = distancer.getDistance(position, furtherFood2)
+
+    return distBetweenFurtherFoods + min(dist1, dist2)
 
 
 class ClosestDotSearchAgent(SearchAgent):
