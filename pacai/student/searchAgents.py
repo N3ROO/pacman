@@ -89,12 +89,15 @@ class CornersProblem(SearchProblem):
         Returns True if and only if the state is a valid goal state.
         """
 
-        # Register the locations we have visited.
-        # This allows the GUI to highlight them.
-        self._visitedLocations.add(state[0])
-        self._visitHistory.append(state[0])
+        goal = state[1:5] == (True, True, True, True)
 
-        return state[1:5] == (True, True, True, True)
+        if goal:
+            # Register the locations we have visited.
+            # This allows the GUI to highlight them.
+            self._visitedLocations.add(state[0])
+            self._visitHistory.append(state[0])
+
+        return goal
 
     def successorStates(self, state):
         """
@@ -124,10 +127,10 @@ class CornersProblem(SearchProblem):
             if (not hitsWall):
                 newState = (
                         (nextx, nexty),
-                        (x, y) == self.corners[0] or state[1],  # bl
-                        (x, y) == self.corners[1] or state[2],  # tl
-                        (x, y) == self.corners[2] or state[3],  # br
-                        (x, y) == self.corners[3] or state[4]   # tr
+                        (nextx, nexty) == self.corners[0] or state[1],  # bl
+                        (nextx, nexty) == self.corners[1] or state[2],  # tl
+                        (nextx, nexty) == self.corners[2] or state[3],  # br
+                        (nextx, nexty) == self.corners[3] or state[4]   # tr
                     )
 
                 successors.append(
@@ -175,13 +178,12 @@ def cornersHeuristic(state, problem):
     (You need not worry about consistency for this heuristic to receive full credit.)
     """
 
-    # Useful information.
-    # corners = problem.corners  # These are the corner coordinates
-    # walls = problem.walls  # These are the walls of the maze, as a Grid.
+    # ---------
+    # First try: following the walls (not exactly that, but it was the idea)
+    # Result: 1897
+    # ----------
 
-    # Actually, we could just follow the walls
     # position = state[0]
-
     # neighboors = []
 
     # for i in range(-1, 2):
@@ -192,17 +194,60 @@ def cornersHeuristic(state, problem):
 
     # return neighboors.count(False)
 
+    # ---------
+    # Second try: heuristic = distance to closest corner
+    # Result: 2838 nodes...
+    # ----------
+
     # We will get a tuple telling us which corner has already been visited: (T/F, T/F, T/F, T/F)
     # With: (bottom left, top left, bottom right, top right)
-    cornersStatus = state[1:5]
-    minDistance = 9999999999999999999
-    for index, cornerStatus in enumerate(cornersStatus):
-        if not cornerStatus:  # if not visited yet
-            dist = distance.manhattan(state[0], problem.corners[index])
-            if dist < minDistance:
-                minDistance = dist
+    # cornersStatus = state[1:5]
+    # minDistance = 9999999999999999999
+    # for index, cornerStatus in enumerate(cornersStatus):
+    #     if not cornerStatus:  # if not visited yet
+    #         dist = distance.manhattan(state[0], problem.corners[index])
+    #         if dist < minDistance:
+    #             minDistance = dist
 
-    return minDistance
+    # return minDistance
+
+    # ---------
+    # Third try: heuristic = the shortest path between corners and pacman
+    # Result: 427 nodes!
+    # Note: it can be optimized by changing the state design
+    # ----------
+
+    heuristic = 0
+
+    # First, we find all the corners that we still need to visit
+    cornersToVisit = []
+    for index, cornerStatus in enumerate(state[1:5]):
+        if not cornerStatus:
+            cornersToVisit.append(problem.corners[index])
+
+    # This is our reference position, it will be updated with the closest
+    # corner of the remaining corners
+    comparaisonPos = state[0]
+
+    # Now we will find the closest corner, and then the closest one to the
+    # closest one until we checked all the corners that we need to visit
+    while len(cornersToVisit) != 0:
+        # Find closest corner
+        closestCorner = cornersToVisit[0]
+        minDistance = distance.manhattan(comparaisonPos, closestCorner)
+        for cornerToVisit in cornersToVisit[1:]:
+            # [1:] -> we don't want the first one because we assume that it is
+            # the closest one
+            if distance.manhattan(comparaisonPos, cornerToVisit) < minDistance:
+                closestCorner = cornerToVisit
+        # We found the closest corner, so we add its distance to the heurisitc
+        heuristic += minDistance
+        # Now we will loop once again with the last corner as the ref position
+        comparaisonPos = closestCorner
+        # And we don't forget to remove this corner from the corners to visit
+        cornersToVisit.remove(closestCorner)
+
+    return heuristic
 
 
 def foodHeuristic(state, problem):
