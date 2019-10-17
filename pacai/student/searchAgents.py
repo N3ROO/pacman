@@ -1,5 +1,6 @@
 """
-This file contains incomplete versions of some agents that can be selected to control Pacman.
+This file contains incomplete versions of some agents that can be selected to
+control Pacman.
 You will complete their implementations.
 
 Good luck and happy searching!
@@ -15,7 +16,7 @@ from pacai.agents.base import BaseAgent
 from pacai.agents.search.base import SearchAgent
 from pacai.core.directions import Directions
 from pacai.core import distance
-import math
+
 
 class CornersProblem(SearchProblem):
     """
@@ -104,8 +105,8 @@ class CornersProblem(SearchProblem):
         Answers the question:
         What moves are possible from this state?
 
-        note: Returns successor states, the actions they require, and a cost of 1.
-            The following code snippet may prove useful
+        note: Returns successor states, the actions they require, and a cost
+        of 1. The following code snippet may prove useful
 
         Returns a list of tuples with three values:
         (successor state, action, cost of taking the action).
@@ -168,6 +169,7 @@ class CornersProblem(SearchProblem):
 
         return len(actions)
 
+
 def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
@@ -175,7 +177,8 @@ def cornersHeuristic(state, problem):
     This function should always return a number that is a lower bound
     on the shortest path from the state to a goal of the problem;
     i.e. it should be admissible.
-    (You need not worry about consistency for this heuristic to receive full credit.)
+    (You need not worry about consistency for this heuristic to receive full
+    credit.)
     """
 
     # ---------
@@ -284,6 +287,7 @@ def foodHeuristic(state, problem):
     # *** Your Code Here ***
     return heuristic.null(state, problem)  # Default to the null heuristic.
 
+
 class ClosestDotSearchAgent(SearchAgent):
     """
     Search for all food using a sequence of searches.
@@ -314,7 +318,8 @@ class ClosestDotSearchAgent(SearchAgent):
 
     def findPathToClosestDot(self, gameState):
         """
-        Returns a path (a list of actions) to the closest dot, starting from gameState.
+        Returns a path (a list of actions) to the closest dot, starting from
+        gameState.
         """
 
         # Here are some useful elements of the startState
@@ -325,6 +330,7 @@ class ClosestDotSearchAgent(SearchAgent):
 
         # *** Your Code Here ***
         raise NotImplementedError()
+
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -347,11 +353,12 @@ class AnyFoodSearchProblem(PositionSearchProblem):
     Fill this in with a goal test that will complete the problem definition.
     """
 
-    def __init__(self, gameState, start = None):
-        super().__init__(gameState, goal = None, start = start)
+    def __init__(self, gameState, start=None):
+        super().__init__(gameState, goal=None, start=start)
 
         # Store the food for later reference.
         self.food = gameState.getFood()
+
 
 class ApproximateSearchAgent(BaseAgent):
     """
