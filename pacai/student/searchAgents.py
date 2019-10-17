@@ -16,6 +16,7 @@ from pacai.agents.search.base import SearchAgent
 from pacai.core.directions import Directions
 from pacai.core import distance
 from pacai.core.distanceCalculator import Distancer
+from pacai.student.search import breadthFirstSearch
 
 
 class CornersProblem(SearchProblem):
@@ -365,8 +366,7 @@ class ClosestDotSearchAgent(SearchAgent):
         # walls = gameState.getWalls()
         # problem = AnyFoodSearchProblem(gameState)
 
-        # *** Your Code Here ***
-        raise NotImplementedError()
+        return breadthFirstSearch(AnyFoodSearchProblem(gameState))
 
 
 class AnyFoodSearchProblem(PositionSearchProblem):
@@ -395,6 +395,17 @@ class AnyFoodSearchProblem(PositionSearchProblem):
 
         # Store the food for later reference.
         self.food = gameState.getFood()
+
+    def isGoal(self, state):
+        if (state not in self.food.asList()):
+            return False
+
+        # Register the locations we have visited.
+        # This allows the GUI to highlight them.
+        self._visitedLocations.add(state)
+        self._visitHistory.append(state)
+
+        return True
 
 
 class ApproximateSearchAgent(BaseAgent):
