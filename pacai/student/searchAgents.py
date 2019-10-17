@@ -214,7 +214,7 @@ def cornersHeuristic(state, problem):
 
     # ---------
     # Third try: heuristic = the shortest path between corners and pacman
-    # Result: 427 nodes!
+    # Result: 692 nodes!
     # Note: it can be optimized by changing the state design
     # ----------
 
@@ -239,8 +239,10 @@ def cornersHeuristic(state, problem):
         for cornerToVisit in cornersToVisit[1:]:
             # [1:] -> we don't want the first one because we assume that it is
             # the closest one
-            if distance.manhattan(comparaisonPos, cornerToVisit) < minDistance:
+            dist = distance.manhattan(comparaisonPos, cornerToVisit)
+            if dist < minDistance:
                 closestCorner = cornerToVisit
+                minDistance = dist
         # We found the closest corner, so we add its distance to the heurisitc
         heuristic += minDistance
         # Now we will loop once again with the last corner as the ref position
