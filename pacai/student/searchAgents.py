@@ -289,7 +289,8 @@ def foodHeuristic(state, problem):
     # Then, we need to get one of those two. We will obviously take the closest one. Then
     # It should be working very well because we will take the food in order. However, it
     # may not be optimal when we will get to eat the first food.
-    # Result: 7537 nodes -> 3/4
+    # Result: 7537 nodes -> 3/4, admissible and consistent!
+    # Note: Could do better by improving the path from start to first further food?
     # ---------
 
     # Used to get the real distance (not manhattan or euclidian)
