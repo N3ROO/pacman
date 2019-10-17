@@ -126,13 +126,11 @@ class CornersProblem(SearchProblem):
             hitsWall = self.walls[nextx][nexty]
 
             if (not hitsWall):
-                newState = (
-                        (nextx, nexty),
-                        (nextx, nexty) == self.corners[0] or state[1],  # bl
-                        (nextx, nexty) == self.corners[1] or state[2],  # tl
-                        (nextx, nexty) == self.corners[2] or state[3],  # br
-                        (nextx, nexty) == self.corners[3] or state[4]   # tr
-                    )
+                newState = ((nextx, nexty),
+                            (nextx, nexty) == self.corners[0] or state[1],
+                            (nextx, nexty) == self.corners[1] or state[2],
+                            (nextx, nexty) == self.corners[2] or state[3],
+                            (nextx, nexty) == self.corners[3] or state[4])
 
                 successors.append(
                     (
