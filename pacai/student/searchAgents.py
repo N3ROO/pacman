@@ -7,7 +7,6 @@ Good luck and happy searching!
 """
 
 import logging
-import random
 
 from pacai.core.actions import Actions
 from pacai.core.search.position import PositionSearchProblem
@@ -18,9 +17,6 @@ from pacai.core.directions import Directions
 from pacai.core import distance
 from pacai.core.distanceCalculator import Distancer
 from pacai.student.search import breadthFirstSearch
-from pacai.student.search import aStarSearch
-from pacai.core.search.food import FoodSearchProblem
-
 
 class CornersProblem(SearchProblem):
     """
@@ -328,10 +324,6 @@ def foodHeuristic(state, problem):
 
     return distBetweenFurtherFoods + min(dist1, dist2)
 
-
-def foodHeuristic2(state, problem):
-    return 1
-
 class ClosestDotSearchAgent(SearchAgent):
     """
     Search for all food using a sequence of searches.
@@ -413,82 +405,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
 
         return True
 
-class OrientedFoodSearchProblem(PositionSearchProblem):
-    """
-    A search problem for finding a path to any food.
-
-    This search problem is just like the PositionSearchProblem,
-    but has a different goal test, which you need to fill in below.
-    The state space and successor function do not need to be changed.
-
-    The class definition above, `AnyFoodSearchProblem(PositionSearchProblem)`,
-    inherits the methods of `pacai.core.search.position.PositionSearchProblem`.
-
-    You can use this search problem to help you fill in
-    the `ClosestDotSearchAgent.findPathToClosestDot` method.
-
-    Additional methods to implement:
-
-    `pacai.core.search.position.PositionSearchProblem.isGoal`:
-    The state is Pacman's position.
-    Fill this in with a goal test that will complete the problem definition.
-    """
-
-    def __init__(self, gameState, orientation, start=None):
-        super().__init__(gameState, goal=None, start=start)
-        self._gameState = gameState
-        self._orientation = orientation
-        self._food = gameState.getFood()
-
-    def isGoal(self, state):
-        # The goal is the food that is the closest to the pacman and
-        # the most oritented at <orientation>
-
-        # First we filter the food that is the most at <orientation>
-        candidates = []
-
-        foodList = self._food.asList()
-        limit = foodList[0][0] if (self._orientation == Directions.WEST or self._orientation == Directions.EAST) else foodList[0][1]
-        candidates.append(foodList[0])
-        for food in foodList:
-            val = food[0] if (self._orientation == Directions.WEST or self._orientation == Directions.EAST) else food[1]
-            if ((val < limit and (self._orientation == Directions.WEST or self._orientation == Directions.SOUTH))
-                    or (val > limit and (self._orientation == Directions.EAST or self._orientation == Directions.NORTH))):
-                limit = val
-                candidates.clear()
-                candidates.append(food)
-            elif val == limit:
-                candidates.append(food)
-
-        # Now, we want the closer to the pacman
-        distancer = Distancer(self._gameState)
-        closer = candidates[0]
-        minDist = distancer.getDistance(state, closer)
-        for candidate in candidates:
-            dist = distancer.getDistance(state, closer)
-            if dist < minDist:
-                minDist = dist
-                closer = candidate
-
-        if state != closer:
-            return False
-
-        # Register the locations we have visited.
-        # This allows the GUI to highlight them.
-        self._visitedLocations.add(state)
-        self._visitHistory.append(state)
-
-        return True
-
 class ApproximateSearchAgent(BaseAgent):
     """
-    Implement your contest entry here.
-
-    Idea:
-
-    Eat the corner that is the closest to the pacman,
-    and that is the most on the left
-
+    We will eat the food one by one. At each iteration, we will
+    find which food is *really* the closest one by using BFS. And
+    then, we will eat it!
     """
 
     def __init__(self, index, **kwargs):
@@ -498,8 +419,7 @@ class ApproximateSearchAgent(BaseAgent):
 
     def getAction(self, state):
         """
-        The BaseAgent will receive an `pacai.core.gamestate.AbstractGameState`,
-        and must return an action from `pacai.core.directions.Directions`.
+        No modifications here.
         """
 
         if (self._actionIndex >= (len(self._actions))):
@@ -512,26 +432,53 @@ class ApproximateSearchAgent(BaseAgent):
 
     def registerInitialState(self, state):
         """
-        Inspect the starting state.
+        At each iteration, we will find and eat the closest food.
         """
 
         currentState = state
 
         while (currentState.getFood().count() > 0):
-            nextPathSegment = self.findPathToClosestDot(currentState)
+            nextPathSegment = self.findPathToClosestFood(currentState)
             self._actions += nextPathSegment
 
             for action in nextPathSegment:
                 legal = currentState.getLegalActions()
                 if action not in legal:
-                    raise Exception('findPathToClosestDot returned an illegal move: %s!\n%s' %
+                    raise Exception('findPathToClosestFood returned an illegal move: %s!\n%s' %
                             (str(action), str(currentState)))
 
                 currentState = currentState.generateSuccessor(0, action)
 
         logging.info('Path found with cost %d.' % len(self._actions))
 
-    def findPathToClosestDot(self, state):
-        # funny
-        # return breadthFirstSearch(OrientedFoodSearchProblem(state, random.choice([Directions.EAST, Directions.WEST, Directions.NORTH, Directions.SOUTH])))
-        return aStarSearch(AnyFoodSearchProblem(state), foodHeuristic2)
+    def realDistance(self, gameState, pos, limit=-1):
+        """
+        It computes the REAL distance between the pacman and a position in the maze.
+        The limit parameter is used as an oiptimization. If the manhattan distance is
+        bigger than the limit, we are sure that the real distance won't be better.
+        We know that manhattan distance >= real distance
+
+        Without limit optimization: ~41 seconds
+        With limit optimization: ~1.5 seconds
+        """
+        if limit != -1:
+            if distance.manhattan(gameState.getPacmanPosition(), pos) > limit:
+                return 9999999
+        return len(breadthFirstSearch(PositionSearchProblem(gameState, goal=pos)))
+
+    def findPathToClosestFood(self, state):
+        """
+        It finds the path to the closest food by taking in account the maze layout. It
+        does not use euclidian distances. It is also optimized (see realDistance(...)).
+        """
+        foods = state.getFood().asList()
+
+        closestFood = foods[0]
+        minDist = self.realDistance(state, closestFood)
+        for food in foods:
+            dist = self.realDistance(state, food, limit=minDist)
+            if dist < minDist:
+                minDist = dist
+                closestFood = food
+
+        return breadthFirstSearch(PositionSearchProblem(state, goal=closestFood))
