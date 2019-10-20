@@ -329,6 +329,25 @@ def foodHeuristic(state, problem):
     # that "maze" function in the first try. I should not have used getDistance from Distancer
     # because it does not give the *real* maze distance. It works so well now!!!!
     # Result: 12.6 seconds 376 nodes!!!!!!!!!! admissible and consistent!
+    #
+    # Optimization idea:
+    # It may be possible to optimize it by pre-computing the distances into the dict given. The
+    # difficulty is to update the computed values if a food was eaten. We have to register the
+    # original foodList, and then at each iteration, we have to make a diff, and we need to
+    # update all the distances that were computed thanks to these eaten foods.
+    # We can't directly update the distances computed because the dict is static, and will be the
+    # same for each call to the heuristic. So we may call the heuristic with one food eaten, and
+    # the in next call, the food can be back on the grid.
+    # 1) If dict key does not exist: compute all the distances and register foodList in dict
+    # 2) Make diff between registeredFoodList and foodList (we can do it with sets in python)
+    # 3) LOCALLY update the computed distances by taking in account the eaten foods
+    # 4) We can use the distances to calculate the heuristic: we want the biggest distance, so
+    #      we may use a sort of priority list where the first one is the one with the bigger dist
+    # Ideas:
+    # computedDistances = list of tuples (distance, foodA, foodB)
+    # With foodB being the FURTHER point from foodA, and distance, the distance between those two.
+    # Remark: if the further food from foodA is foodB, it does not mean that the further food from
+    # foodB is foodA.
     # ---------
 
     # We will need to calculate the distances using distance.maze. But it requires a SearchProblem
