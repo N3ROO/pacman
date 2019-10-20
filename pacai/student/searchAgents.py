@@ -15,7 +15,6 @@ from pacai.agents.base import BaseAgent
 from pacai.agents.search.base import SearchAgent
 from pacai.core.directions import Directions
 from pacai.core import distance
-from pacai.core.distanceCalculator import Distancer
 from pacai.student.search import breadthFirstSearch
 
 class CornersProblem(SearchProblem):
@@ -282,8 +281,6 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access problem.heuristicInfo['wallCount'].
     """
 
-    position, foodGrid = state
-
     # ---------
     # First try: we find the two furthest fruits, because we will need to get them anyway.
     # Then, we need to get one of those two. We will obviously take the closest one. Then
@@ -291,27 +288,88 @@ def foodHeuristic(state, problem):
     # may not be optimal when we will get to eat the first food.
     # Result: 7.8 seconds 7537 nodes -> 3/4, admissible and consistent!
     # Note: Could do better by improving the path from start to first further food?
+    # Requierement: from pacai.core.distanceCalculator import Distancer
     # ---------
 
+    # position, foodGrid = state
+
+    # # Used to get the real distance (not manhattan or euclidian)
+    # distancer = Distancer(problem)
+    # foodList = foodGrid.asList()
+
+    # # In case if there is only one food remaining, we don't need to find the furthers ones
+    # if len(foodList) == 1:
+    #     return distancer.getDistance(position, foodList[0])
+    # # If there are no more foods, we can't calculate the heuristic
+    # elif len(foodList) == 0:
+    #     return 0
+
+    # # We compare every food to every other food to retrieve the ones that are the most spaced
+    # furtherFood1, furtherFood2 = foodList[0], foodList[1]
+    # distBetweenFurtherFoods = distancer.getDistance(furtherFood1, furtherFood2)
+    # i, j = 0, 0
+    # while i < len(foodList):
+    #     j = i + 1
+    #     while j < len(foodList):
+    #         dist = distancer.getDistance(foodList[i], foodList[j])
+    #         if dist > distBetweenFurtherFoods:
+    #             distBetweenFurtherFoods = dist
+    #             furtherFood1, furtherFood2 = foodList[i], foodList[j]
+    #         j += 1
+    #     i += 1
+
+    # # Now we find the distance from current Pacman position to the closer of previous two fruits
+    # dist1 = distancer.getDistance(position, furtherFood1)
+    # dist2 = distancer.getDistance(position, furtherFood2)
+
+    # return distBetweenFurtherFoods + min(dist1, dist2)
+
+    # ---------
+    # Second try: the same thing, but with a better distance calculation, because I did not see
+    # that "maze" function in the first try. I should not have used getDistance from Distancer
+    # because it does not give the *real* maze distance. It works so well now!!!!
+    # Result: 12.6 seconds 376 nodes!!!!!!!!!! admissible and consistent!
+    # ---------
+
+    # We will need to calculate the distances using distance.maze. But it requires a SearchProblem
+    # that has "getWalls()" method. Sadly, FoodSearchProblem does not have "getWalls" method, so we
+    # will add dynamically this method to the problem instance it is a sort of hack, but the results
+    # are fantastic
+
+    # we convert the walls given by problem.walls into the good format
+    wallList = [[problem.walls[y][x] for x in range(0, problem.walls.getHeight())]
+                for y in range(0, problem.walls.getWidth())]
+
+    # problem.walls is not callable, so we need to create a function that returns the list
+    def getWalls():
+        # I love python
+        return wallList
+
+    # We can now dynamically add a new method to the problem instance
+    problem.getWalls = getWalls
+
+    # Then, the algorithm is the same, but we use distance.maze!
+    position, foodGrid = state
+
     # Used to get the real distance (not manhattan or euclidian)
-    distancer = Distancer(problem)
+    # distancer = Distancer(problem)
     foodList = foodGrid.asList()
 
     # In case if there is only one food remaining, we don't need to find the furthers ones
     if len(foodList) == 1:
-        return distancer.getDistance(position, foodList[0])
+        return distance.maze(position, foodList[0], problem)
     # If there are no more foods, we can't calculate the heuristic
     elif len(foodList) == 0:
         return 0
 
     # We compare every food to every other food to retrieve the ones that are the most spaced
     furtherFood1, furtherFood2 = foodList[0], foodList[1]
-    distBetweenFurtherFoods = distancer.getDistance(furtherFood1, furtherFood2)
+    distBetweenFurtherFoods = distance.maze(furtherFood1, furtherFood2, problem)
     i, j = 0, 0
     while i < len(foodList):
         j = i + 1
         while j < len(foodList):
-            dist = distancer.getDistance(foodList[i], foodList[j])
+            dist = distance.maze(foodList[i], foodList[j], problem)
             if dist > distBetweenFurtherFoods:
                 distBetweenFurtherFoods = dist
                 furtherFood1, furtherFood2 = foodList[i], foodList[j]
@@ -319,8 +377,8 @@ def foodHeuristic(state, problem):
         i += 1
 
     # Now we find the distance from current Pacman position to the closer of previous two fruits
-    dist1 = distancer.getDistance(position, furtherFood1)
-    dist2 = distancer.getDistance(position, furtherFood2)
+    dist1 = distance.maze(position, furtherFood1, problem)
+    dist2 = distance.maze(position, furtherFood2, problem)
 
     return distBetweenFurtherFoods + min(dist1, dist2)
 
@@ -451,20 +509,21 @@ class ApproximateSearchAgent(BaseAgent):
 
         logging.info('Path found with cost %d.' % len(self._actions))
 
-    def realDistance(self, gameState, pos, limit=-1):
+    def optimizedMazeDistance(self, state, pos1, pos2, limit=-1):
         """
-        It computes the REAL distance between the pacman and a position in the maze.
-        The limit parameter is used as an oiptimization. If the manhattan distance is
+        It computes the REAL distance between the pacman and a position in the maze by
+        using distance.mazeDistance().
+        The limit parameter is used as an optimization. If the manhattan distance is
         bigger than the limit, we are sure that the real distance won't be better.
-        We know that manhattan distance >= real distance
+        We know that manhattan distance >= real distance by logic
 
         Without limit optimization: ~41 seconds
         With limit optimization: ~1.5 seconds
         """
         if limit != -1:
-            if distance.manhattan(gameState.getPacmanPosition(), pos) > limit:
+            if distance.manhattan(pos1, pos2) > limit:
                 return 9999999
-        return len(breadthFirstSearch(PositionSearchProblem(gameState, goal=pos)))
+        return len(breadthFirstSearch(PositionSearchProblem(state, start=pos1, goal=pos2)))
 
     def findPathToClosestFood(self, state):
         """
@@ -473,10 +532,11 @@ class ApproximateSearchAgent(BaseAgent):
         """
         foods = state.getFood().asList()
 
+        pacman = state.getPacmanPosition()
         closestFood = foods[0]
-        minDist = self.realDistance(state, closestFood)
+        minDist = self.optimizedMazeDistance(state, pacman, closestFood)
         for food in foods:
-            dist = self.realDistance(state, food, limit=minDist)
+            dist = self.optimizedMazeDistance(state, pacman, food, limit=minDist)
             if dist < minDist:
                 minDist = dist
                 closestFood = food
