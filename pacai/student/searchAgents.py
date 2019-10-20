@@ -290,7 +290,7 @@ def foodHeuristic(state, problem):
     # Then, we need to get one of those two. We will obviously take the closest one. Then
     # It should be working very well because we will take the food in order. However, it
     # may not be optimal when we will get to eat the first food.
-    # Result: 7537 nodes -> 3/4, admissible and consistent!
+    # Result: 7.8 seconds 7537 nodes -> 3/4, admissible and consistent!
     # Note: Could do better by improving the path from start to first further food?
     # ---------
 
@@ -424,3 +424,43 @@ class ApproximateSearchAgent(BaseAgent):
 
     def __init__(self, index, **kwargs):
         super().__init__(index)
+        self._actionIndex = 0
+        self._actions = []
+
+    def getAction(self, state):
+        """
+        The BaseAgent will receive an `pacai.core.gamestate.AbstractGameState`,
+        and must return an action from `pacai.core.directions.Directions`.
+        """
+
+        if (self._actionIndex >= (len(self._actions))):
+            return Directions.STOP
+
+        action = self._actions[self._actionIndex]
+        self._actionIndex += 1
+
+        return action
+
+    def registerInitialState(self, state):
+        """
+        Inspect the starting state.
+        """
+
+        currentState = state
+
+        while (currentState.getFood().count() > 0):
+            nextPathSegment = self.findPathToClosestDot(currentState)
+            self._actions += nextPathSegment
+
+            for action in nextPathSegment:
+                legal = currentState.getLegalActions()
+                if action not in legal:
+                    raise Exception('findPathToClosestDot returned an illegal move: %s!\n%s' %
+                            (str(action), str(currentState)))
+
+                currentState = currentState.generateSuccessor(0, action)
+
+        logging.info('Path found with cost %d.' % len(self._actions))
+
+    def findPathToClosestDot(self, state):
+        return breadthFirstSearch(AnyFoodSearchProblem(state))
