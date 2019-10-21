@@ -9,7 +9,7 @@ jobs:
 
     steps:
     - name: tk installation (before python!)
-      run: sudo apt-get install tk-dev
+      run: sudo apt-get install python3.5-tk
           
     - uses: actions/setup-python@v1
       with:
