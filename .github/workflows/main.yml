@@ -8,16 +8,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: tk installation (before python!)
-      run: sudo apt-get install python-tk python3-tk tk-dev
-  
-    - uses: actions/checkout@master
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.5'
-        architecture: 'x64' # (x64 or x86)
-
     - name: run CI script
       run: |
+        sudo apt-get install python-tk python3-tk tk-dev
+        pyenv install 3.5.0
         pip install -r requirements.txt
         ./.ci/run.sh
