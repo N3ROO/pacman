@@ -11,7 +11,6 @@ jobs:
     - uses: actions/checkout@master
     - name: run CI script
       run: |
-        sudo apt-get install python-tk python3-tk tk-dev
-        sudo apt-get install python3.7
-        pip install -r requirements.txt
+        sudo apt-get install python-tk python3-tk tk-dev python3.5
+        python -m pip install -r requirements.txt
         ./.ci/run.sh
