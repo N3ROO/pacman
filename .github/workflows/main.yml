@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@master
     - name: run CI script
       run: |
         sudo apt-get install python-tk python3-tk tk-dev
