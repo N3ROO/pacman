@@ -1,5 +1,16 @@
 ## Pacman
 
+Updated by Lilian Gallon for the CSE140 class at UCSC. Files updated:
+
+**First assignement (25/25):**
+- pacai/student/seach.py
+- pacai/student/searchAgents.py
+
+**Second assignement (?/?)**
+- pacai/student/multiagents.py
+
+### Description
+
 A modified version of the Pacman educational project from the [Berkeley AI Lab](http://ai.berkeley.edu/project_overview.html).
 
 Some improvements from the original project:
