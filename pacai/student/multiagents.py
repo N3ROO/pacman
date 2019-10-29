@@ -54,36 +54,35 @@ class ReflexAgent(BaseAgent):
         newPosition = successorGameState.getPacmanPosition()
         oldFood = currentGameState.getFood().asList()
         newFood = successorGameState.getFood().asList()
+        oldCapsules = currentGameState.getCapsules()
 
         score = 0
 
         # Pacman does not like ghost unless if he ate a capsule!
         for ghostState in successorGameState.getGhostStates():
-            if ghostState.getPosition() == newPosition:
+            dist = distance.manhattan(newPosition, ghostState.getPosition())
+            if dist <= 2:
                 score += - 1000 if ghostState.getScaredTimer() == 0 else 500
             else:
-                dist = distance.manhattan(newPosition, ghostState.getPosition())
-                score += - dist if ghostState.getScaredTimer() == 0 else dist
+                score += - 5 / dist if ghostState.getScaredTimer() == 0 else 10 / dist
 
         # Pacman likes food
-        if len(oldFood) != len(newFood):
+        if newPosition in oldFood:
             score += 100
         else:
-            minDistance = distance.manhattan(oldFood[0], newPosition)
             for food in oldFood:
-                dist = distance.manhattan(food, newPosition)
-                if dist < minDistance:
-                    dist = minDistance
-            # random to prevent being stuck if all the choices have the same score
-            score += 50 - dist + random.randrange(0, 5)
+                score += 5 / distance.manhattan(food, newPosition)
 
         # Pacman likes capsules :)
-        if newPosition in currentGameState.getCapsules():
+        if newPosition in oldCapsules:
             score += 200
+        else:
+            for capsule in oldCapsules:
+                score += 20 / distance.manhattan(capsule, newPosition)
 
         # And pacman does not like to stop
         if action == Directions.STOP:
-            score -= 10
+            score -= 3
 
         # If only pacman needs to know his way
         # print(str(action) + " " + str(score))
