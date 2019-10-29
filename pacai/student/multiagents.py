@@ -2,6 +2,8 @@ import random
 
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
+from pacai.core import distance
+from pacai.core.directions import Directions
 
 class ReflexAgent(BaseAgent):
     """
@@ -49,16 +51,44 @@ class ReflexAgent(BaseAgent):
         """
 
         successorGameState = currentGameState.generatePacmanSuccessor(action)
+        newPosition = successorGameState.getPacmanPosition()
+        oldFood = currentGameState.getFood().asList()
+        newFood = successorGameState.getFood().asList()
 
-        # Useful information you can extract.
-        # newPosition = successorGameState.getPacmanPosition()
-        # oldFood = currentGameState.getFood()
-        # newGhostStates = successorGameState.getGhostStates()
-        # newScaredTimes = [ghostState.getScaredTimer() for ghostState in newGhostStates]
+        score = 0
 
-        # *** Your Code Here ***
+        # Pacman does not like ghost unless if he ate a capsule!
+        for ghostState in successorGameState.getGhostStates():
+            if ghostState.getPosition() == newPosition:
+                score += - 1000 if ghostState.getScaredTimer() == 0 else 500
+            else:
+                dist = distance.manhattan(newPosition, ghostState.getPosition())
+                score += - dist if ghostState.getScaredTimer() == 0 else dist
 
-        return successorGameState.getScore()
+        # Pacman likes food
+        if len(oldFood) != len(newFood):
+            score += 100
+        else:
+            minDistance = distance.manhattan(oldFood[0], newPosition)
+            for food in oldFood:
+                dist = distance.manhattan(food, newPosition)
+                if dist < minDistance:
+                    dist = minDistance
+            # random to prevent being stuck if all the choices have the same score
+            score += 50 - dist + random.randrange(0, 5)
+
+        # Pacman likes capsules :)
+        if newPosition in currentGameState.getCapsules():
+            score += 200
+
+        # And pacman does not like to stop
+        if action == Directions.STOP:
+            score -= 10
+
+        # If only pacman needs to know his way
+        # print(str(action) + " " + str(score))
+
+        return score
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
