@@ -53,7 +53,6 @@ class ReflexAgent(BaseAgent):
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPosition = successorGameState.getPacmanPosition()
         oldFood = currentGameState.getFood().asList()
-        newFood = successorGameState.getFood().asList()
         oldCapsules = currentGameState.getCapsules()
 
         score = 0
@@ -118,6 +117,51 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
     def __init__(self, index, **kwargs):
         super().__init__(index)
+
+    def getAction(self, state):
+        """ returns the minimax action from the current gameState using getTreeDepth
+        """
+        return self.__minimax__(state, self.getTreeDepth())
+
+    def getEvaluationFunction(self):
+        return super().getEvaluationFunction()
+
+    def __minimax__(self, state, depth):
+        bestAction = Directions.STOP
+        bestScore = - float("inf")
+
+        for action in state.getLegalActions(0):
+            successor = state.generateSuccessor(0, action)
+            score = max(bestScore, self.__minValue__(successor, depth, 1))
+            if score > bestScore:
+                bestAction = action
+                bestScore = score
+
+        return bestAction
+
+    def __maxValue__(self, state, depth):
+        if state.isWin() or state.isLose() or depth == 0:
+            return self.getEvaluationFunction()(state)
+
+        maxValue = - float("inf")
+        for action in state.getLegalActions(0):
+            successor = state.generateSuccessor(0, action)
+            maxValue = max(maxValue, self.__minValue__(successor, depth, 1))
+        return maxValue
+
+    def __minValue__(self, state, depth, ghostId):
+        if state.isWin() or state.isLose() or depth == 0:
+            return self.getEvaluationFunction()(state)
+
+        minValue = float("inf")
+
+        for action in state.getLegalActions(ghostId):
+            successor = state.generateSuccessor(ghostId, action)
+            if ghostId == state.getNumAgents() - 1:
+                minValue = min(minValue, self.__maxValue__(successor, depth - 1))
+            else:
+                minValue = min(minValue, self.__minValue__(successor, depth, ghostId + 1))
+        return minValue
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
