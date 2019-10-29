@@ -145,6 +145,8 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         maxValue = - float("inf")
         for action in state.getLegalActions(0):
+            if action == Directions.STOP:
+                continue
             successor = state.generateSuccessor(0, action)
             maxValue = max(maxValue, self.__minValue__(successor, depth, 1))
         return maxValue
@@ -156,6 +158,8 @@ class MinimaxAgent(MultiAgentSearchAgent):
         minValue = float("inf")
 
         for action in state.getLegalActions(ghostId):
+            if action == Directions.STOP:
+                continue
             successor = state.generateSuccessor(ghostId, action)
             if ghostId == state.getNumAgents() - 1:
                 minValue = min(minValue, self.__maxValue__(successor, depth - 1))
