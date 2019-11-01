@@ -131,8 +131,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
         bestScore = - float("inf")
 
         for action in state.getLegalActions(0):
+            if action == Directions.STOP:
+                continue
             successor = state.generateSuccessor(0, action)
-            score = max(bestScore, self.__minValue__(successor, depth, 1))
+            score = self.__maxValue__(successor, depth)
             if score > bestScore:
                 bestAction = action
                 bestScore = score
@@ -143,29 +145,28 @@ class MinimaxAgent(MultiAgentSearchAgent):
         if state.isWin() or state.isLose() or depth == 0:
             return self.getEvaluationFunction()(state)
 
-        maxValue = - float("inf")
+        v = - float("inf")
         for action in state.getLegalActions(0):
             if action == Directions.STOP:
                 continue
             successor = state.generateSuccessor(0, action)
-            maxValue = max(maxValue, self.__minValue__(successor, depth, 1))
-        return maxValue
+            v = max(v, self.__minValue__(successor, depth, 1))
+        return v
 
     def __minValue__(self, state, depth, ghostId):
         if state.isWin() or state.isLose() or depth == 0:
             return self.getEvaluationFunction()(state)
 
-        minValue = float("inf")
-
+        v = float("inf")
         for action in state.getLegalActions(ghostId):
             if action == Directions.STOP:
                 continue
             successor = state.generateSuccessor(ghostId, action)
             if ghostId == state.getNumAgents() - 1:
-                minValue = min(minValue, self.__maxValue__(successor, depth - 1))
+                v = min(v, self.__maxValue__(successor, depth - 1))
             else:
-                minValue = min(minValue, self.__minValue__(successor, depth, ghostId + 1))
-        return minValue
+                v = min(v, self.__minValue__(successor, depth, ghostId + 1))
+        return v
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
