@@ -183,6 +183,65 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index)
 
+    def getAction(self, state):
+        return self.__minimax__(state, self.getTreeDepth())
+
+    def __minimax__(self, state, depth):
+        bestAction = Directions.STOP
+        bestScore = - float("inf")
+
+        for action in state.getLegalActions(0):
+            if action == Directions.STOP:
+                continue
+            successor = state.generateSuccessor(0, action)
+            score = self.__maxValue__(successor, depth, - float("inf"), float("inf"))
+            if score > bestScore:
+                bestAction = action
+                bestScore = score
+
+        return bestAction
+
+    def __maxValue__(self, state, depth, alpha, beta):
+        if state.isWin() or state.isLose() or depth == 0:
+            return self.getEvaluationFunction()(state)
+
+        maxValue = - float("inf")
+        for action in state.getLegalActions(0):
+            if action == Directions.STOP:
+                continue
+            successor = state.generateSuccessor(0, action)
+            currentValue = self.__minValue__(successor, depth, alpha, beta, 1)
+            maxValue = max(maxValue, currentValue)
+
+            # alpha beta pruning
+            alpha = max(alpha, currentValue)
+            if beta <= alpha:
+                break
+
+        return maxValue
+
+    def __minValue__(self, state, depth, alpha, beta, ghostId):
+        if state.isWin() or state.isLose() or depth == 0:
+            return self.getEvaluationFunction()(state)
+
+        minValue = float("inf")
+        for action in state.getLegalActions(ghostId):
+            if action == Directions.STOP:
+                continue
+            successor = state.generateSuccessor(ghostId, action)
+            if ghostId == state.getNumAgents() - 1:
+                currentValue = self.__maxValue__(successor, depth - 1, alpha, beta)
+            else:
+                currentValue = self.__minValue__(successor, depth, alpha, beta, ghostId + 1)
+            minValue = min(minValue, currentValue)
+
+            # alpha beta pruning
+            beta = min(beta, currentValue)
+            if beta <= alpha:
+                break
+
+        return minValue
+
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
     An expectimax agent.
@@ -199,6 +258,47 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
     def __init__(self, index, **kwargs):
         super().__init__(index)
+
+    def getAction(self, state):
+        bestAction = Directions.STOP
+        bestScore = - float("inf")
+        actions = self.__getLegalActions__(state, 0)
+
+        for action in actions:
+            successor = state.generateSuccessor(0, action)
+            score = self.__expectiminimax__(successor, self.getTreeDepth(), 1)
+            if score > bestScore:
+                bestAction = action
+                bestScore = score
+
+        return bestAction
+
+    def __expectiminimax__(self, state, depth, agentId):
+        if state.isWin() or state.isLose() or depth == 0:
+            return self.getEvaluationFunction()(state)
+
+        actions = self.__getLegalActions__(state, agentId)
+
+        if agentId == 0:
+            value = - float("inf")
+            for action in actions:
+                successor = state.generateSuccessor(agentId, action)
+                value = max(value, self.__expectiminimax__(successor, depth - 1, agentId + 1))
+            return value
+
+        else:
+            value = 0
+            for action in actions:
+                successor = state.generateSuccessor(agentId, action)
+                nextAgent = (agentId + 1) % state.getNumAgents()
+                value += self.__expectiminimax__(successor, depth, nextAgent)
+            return value / len(actions)
+
+    def __getLegalActions__(self, state, agentId):
+        actions = state.getLegalActions(agentId)
+        if Directions.STOP in actions:
+            actions.remove(Directions.STOP)
+        return actions
 
 def betterEvaluationFunction(currentGameState):
     """
