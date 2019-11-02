@@ -322,12 +322,11 @@ def betterEvaluationFunction(currentGameState):
     4) I had to clearly show the coefficients so that I can update it easily if needed. That's why
     the score is computed in detail at the end. It is ordered in ascending priority.
 
-    5) The capsules are not needed to win the game, but I need to tell to pacman to eat them if he is
-    close enough. That's why I don't compute the closest capsule distance. I prefer that pacman focuses
-    on eating food and on dodging the ghosts than trying to get the capsules. So counting the remaining
-    capsules is a really good solution, because if pacman sees a capsule next to him, he will jump on it.
-
-
+    5) The capsules are not needed to win the game, but I need to tell to pacman to eat them if he
+    is close enough. That's why I don't compute the closest capsule distance. I prefer that pacman
+    focuses on eating food and on dodging the ghosts than trying to get the capsules. So counting
+    the remaining capsules is a really good solution, because if pacman sees a capsule next to him,
+    he will jump on it.
     """
 
     pacman = currentGameState.getPacmanPosition()
