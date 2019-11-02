@@ -2,7 +2,7 @@
 
 Updated by Lilian Gallon for the CSE140 class at UCSC. Files updated:
 
-**First assignement (25/25):**
+**First assignement (26/25):**
 - pacai/student/seach.py
 - pacai/student/searchAgents.py
 
