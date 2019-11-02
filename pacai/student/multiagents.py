@@ -16,7 +16,7 @@ class ReflexAgent(BaseAgent):
     """
 
     def __init__(self, index, **kwargs):
-        super().__init__(index)
+        super().__init__(index, **kwargs)
 
     def getAction(self, gameState):
         """
@@ -116,7 +116,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
 
     def __init__(self, index, **kwargs):
-        super().__init__(index)
+        super().__init__(index, **kwargs)
 
     def getAction(self, state):
         """ returns the minimax action from the current gameState using getTreeDepth
@@ -183,7 +183,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     """
 
     def __init__(self, index, **kwargs):
-        super().__init__(index)
+        super().__init__(index, **kwargs)
 
     def getAction(self, state):
         return self.__minimax__(state, self.getTreeDepth())
@@ -259,7 +259,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
 
     def __init__(self, index, **kwargs):
-        super().__init__(index)
+        super().__init__(index, **kwargs)
 
     def getAction(self, state):
         bestAction = Directions.STOP
@@ -306,10 +306,63 @@ def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable evaluation function.
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION:
+
+    I took the work that I did in my reflex agent, and I improved it:
+
+    1) I need to take into account the terminal states (won or lost)
+
+    2) It is not really relevant to sum up the distance with all the remaining foods. I just need
+    to tell to pacman where is the closest one.
+
+    3) It was a good idea to tell to pacman to eat the ghosts if he could, or to run away fast from
+    them if it was not the case. The calculation works the same way as for the food, but we change
+    the operator (+ or -) according to the state of the closest ghost (scared or not).
+
+    4) I had to clearly show the coefficients so that I can update it easily if needed. That's why
+    the score is computed in detail at the end. It is ordered in ascending priority.
+
+    5) The capsules are not needed to win the game, but I need to tell to pacman to eat them if he is
+    close enough. That's why I don't compute the closest capsule distance. I prefer that pacman focuses
+    on eating food and on dodging the ghosts than trying to get the capsules. So counting the remaining
+    capsules is a really good solution, because if pacman sees a capsule next to him, he will jump on it.
+
+
     """
 
-    return currentGameState.getScore()
+    pacman = currentGameState.getPacmanPosition()
+
+    # We need to specify the terminal states
+    if currentGameState.isWin():
+        return + float("inf")
+    elif currentGameState.isLose():
+        return - float("inf")
+
+    # We want to know where is the closest food
+    foods = currentGameState.getFood().asList()
+    closestFoodDistance = distance.manhattan(pacman, foods[0])
+    for food in foods:
+        dist = distance.manhattan(pacman, food)
+        if dist < closestFoodDistance:
+            closestFoodDistance = dist
+
+    # We want the closest ghost distance. The distance will be negative
+    # if the ghost is not scared, positive otherwise
+    ghosts = currentGameState.getGhostStates()
+    closestGhostDistance = distance.manhattan(pacman, ghosts[0].getPosition())
+    for ghost in ghosts:
+        dist = distance.manhattan(pacman, ghost.getPosition())
+        if dist < abs(closestGhostDistance):
+            closestGhostDistance = - dist if ghost.getScaredTimer() == 0 else dist
+
+    # coefficients * parameters ordered in ascending priority
+    score = 0
+    score += + 1.0 * currentGameState.getScore()
+    score += - 2.0 * closestFoodDistance
+    score += + 3.0 * closestGhostDistance
+    score += - 4.0 * len(currentGameState.getCapsules())
+
+    return score
 
 class ContestAgent(MultiAgentSearchAgent):
     """
