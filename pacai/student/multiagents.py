@@ -294,6 +294,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 successor = state.generateSuccessor(agentId, action)
                 nextAgent = (agentId + 1) % state.getNumAgents()
                 value += self.__expectiminimax__(successor, depth, nextAgent)
+            # v1 * 1/p + v2 * 1/p + ... + vk * 1/p = (v1 + v2 + ... + vk) / p
             return value / len(actions)
 
     def __getLegalActions__(self, state, agentId):
@@ -379,4 +380,113 @@ class ContestAgent(MultiAgentSearchAgent):
     """
 
     def __init__(self, index, **kwargs):
-        super().__init__(index)
+        super().__init__(index, **kwargs)
+        if kwargs:
+            print("[ContestAgent/WARNING]: You used parameters, but we will ignore depth and "
+                + "eval function.")
+
+        self._treeDepth = 3
+        self._evaluationFunction = self.__eval__
+
+    def getAction(self, state):
+        bestAction = Directions.STOP
+        bestScore = - float("inf")
+        actions = self.__getLegalActions__(state, 0)
+
+        for action in actions:
+            successor = state.generateSuccessor(0, action)
+            score = self.__expectiminimax__(successor, self.getTreeDepth(), 1)
+            if score > bestScore:
+                bestAction = action
+                bestScore = score
+
+        return bestAction
+
+    def __expectiminimax__(self, state, depth, agentId):
+        if state.isWin() or state.isLose() or depth == 0:
+            return self.getEvaluationFunction()(state)
+
+        actions = self.__getLegalActions__(state, agentId)
+
+        if agentId == 0:
+            value = - float("inf")
+            for action in actions:
+                successor = state.generateSuccessor(agentId, action)
+                value = max(value, self.__expectiminimax__(successor, depth - 1, agentId + 1))
+            return value
+
+        else:
+            # Here comes the change. The ghosts do not take random actions now. They want to
+            # eat our friend pacman. We need to save him by telling him that the ghosts will
+            # prefer taking actions that reduce the distance with him. Yes, we hacked into the
+            # ghosts' code!
+            pacman = state.getPacmanPosition()
+            oldGhostDistance = distance.manhattan(pacman, state.getGhostPosition(agentId))
+            coefficient = 10  # How much will take seriously the optimal ghost action
+            n = 0  # The number to devide the total (to get the state average)
+
+            value = 0
+            for action in actions:
+                successor = state.generateSuccessor(agentId, action)
+                nextAgent = (agentId + 1) % state.getNumAgents()
+                newGhostDistance = distance.manhattan(pacman, successor.getGhostPosition(agentId))
+
+                # We will increase the weight of a state that the ghost prefers
+                isScared = state.getGhostState(agentId).getScaredTimer() == 0
+                if ((newGhostDistance < oldGhostDistance and isScared)
+                        or (newGhostDistance > oldGhostDistance and not isScared)):
+                    # He is not afraid and wants to go close to pacman OR
+                    # He is afraid and wants to go far from pacman
+                    value += self.__expectiminimax__(successor, depth, nextAgent) * coefficient
+                    n += coefficient
+                else:
+                    value += self.__expectiminimax__(successor, depth, nextAgent) * 1
+                    n += 1
+
+            return value / n
+
+    def __getLegalActions__(self, state, agentId):
+        actions = state.getLegalActions(agentId)
+        if Directions.STOP in actions:
+            actions.remove(Directions.STOP)
+        return actions
+
+    def __eval__(self, currentGameState):
+        """
+        It is the same evaluation function as for question 4, but with coefficient
+        changes.
+        """
+
+        pacman = currentGameState.getPacmanPosition()
+
+        # We need to specify the terminal states
+        if currentGameState.isWin():
+            return + float("inf")
+        elif currentGameState.isLose():
+            return - float("inf")
+
+        # We want to know where is the closest food
+        foods = currentGameState.getFood().asList()
+        closestFoodDistance = distance.manhattan(pacman, foods[0])
+        for food in foods:
+            dist = distance.manhattan(pacman, food)
+            if dist < closestFoodDistance:
+                closestFoodDistance = dist
+
+        # We want the closest ghost distance. The distance will be negative
+        # if the ghost is not scared, positive otherwise
+        ghosts = currentGameState.getGhostStates()
+        closestGhostDistance = distance.manhattan(pacman, ghosts[0].getPosition())
+        for ghost in ghosts:
+            dist = distance.manhattan(pacman, ghost.getPosition())
+            if dist < abs(closestGhostDistance):
+                closestGhostDistance = - dist if ghost.getScaredTimer() == 0 else dist
+
+        # coefficients * parameters ordered in ascending priority
+        score = 0
+        score += + 1.0 * currentGameState.getScore()
+        score += - 2.0 * closestFoodDistance
+        score += + 2.0 * closestGhostDistance
+        score += - 4.0 * len(currentGameState.getCapsules())
+
+        return score
