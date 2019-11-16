@@ -11,11 +11,12 @@ NOT_POSSIBLE = None
 
 def question2():
     """
-    [Enter a description of what you did here.]
+    If we want the agent to cross the bridge, we just have to remove the noise, so that the agent
+    never falls.
     """
 
     answerDiscount = 0.9
-    answerNoise = 0.2
+    answerNoise = 0
 
     return answerDiscount, answerNoise
 
