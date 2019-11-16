@@ -216,6 +216,7 @@ class ApproximateQAgent(PacmanQAgent):
         self.featExtractor = reflection.qualifiedImport(extractor)
 
         # You might want to initialize weights here.
+        self.weights = counter.Counter()
 
     def final(self, state):
         """
@@ -229,4 +230,30 @@ class ApproximateQAgent(PacmanQAgent):
         if self.episodesSoFar == self.numTraining:
             # You might want to print your weights here for debugging.
             # *** Your Code Here ***
-            raise NotImplementedError()
+            pass
+
+    def getQValue(self, state, action):
+        """
+        Should return `Q(state, action) = w * featureVector`,
+        where `*` is the dotProduct operator.
+        """
+
+        weights = self.weights
+        features = self.featExtractor.getFeatures(self, state, action)
+
+        return weights * features
+
+    def update(self, state, action, nextState, reward):
+        """
+        Should update your weights based on transition.
+        """
+
+        # For *some* reason I need to put "self" as a first argument because otherwise it says that
+        # it misses one argument "action". I don't understand.
+        features = self.featExtractor.getFeatures(self, state, action)
+
+        for feature in features:
+            # These computations are taken from the P3 instructions
+            correction = (reward + self.getDiscountRate() * self.getValue(nextState))
+            correction -= self.getQValue(state, action)
+            self.weights[feature] += self.getAlpha() * correction * features[feature]
