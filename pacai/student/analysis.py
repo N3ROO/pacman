@@ -16,62 +16,67 @@ def question2():
     """
 
     answerDiscount = 0.9
-    answerNoise = 0
+    answerNoise = 0  # updated
 
     return answerDiscount, answerNoise
 
 def question3a():
     """
-    [Enter a description of what you did here.]
+    We just need to change the living reward to a negative one to force the agent to finish fast.
     """
 
     answerDiscount = 0.9
     answerNoise = 0.2
-    answerLivingReward = 0.0
+    answerLivingReward = -3  # updated
 
     return answerDiscount, answerNoise, answerLivingReward
 
 def question3b():
     """
-    [Enter a description of what you did here.]
+    First, we need to change the living reward to a negative one so that the agent wants to finish
+    fast. But we don't want him to fall. So we need to update the noise to tell him that it is not
+    a good idea to go on the bridge. Then we need to change the discount rate. I have to admit that
+    it was a bit random for this one. But it works with 0.5!
     """
 
-    answerDiscount = 0.9
-    answerNoise = 0.2
-    answerLivingReward = 0.0
+    answerDiscount = 0.5  # updated
+    answerNoise = 0.1  # updated
+    answerLivingReward = -1  # updated
 
     return answerDiscount, answerNoise, answerLivingReward
 
 def question3c():
     """
-    [Enter a description of what you did here.]
+    We just need a negative living reward (not too big so that it do won't go in +1)
     """
 
     answerDiscount = 0.9
     answerNoise = 0.2
-    answerLivingReward = 0.0
+    answerLivingReward = -1  # updated
 
     return answerDiscount, answerNoise, answerLivingReward
 
 def question3d():
     """
-    [Enter a description of what you did here.]
+    We just need a negative living reward, but just a bit! So that it takes the longest path
+    possible.
     """
 
     answerDiscount = 0.9
     answerNoise = 0.2
-    answerLivingReward = 0.0
+    answerLivingReward = -0.1  # updated
 
     return answerDiscount, answerNoise, answerLivingReward
 
 def question3e():
     """
-    [Enter a description of what you did here.]
+    We just have to tell that it is better for him to not end the game. So we put a big living
+    reward.
     """
 
     answerDiscount = 0.9
     answerNoise = 0.2
-    answerLivingReward = 0.0
+    answerLivingReward = 2
 
     return answerDiscount, answerNoise, answerLivingReward
 
