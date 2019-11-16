@@ -39,8 +39,22 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.iters = iters
         self.values = counter.Counter()  # A Counter is a dict with default 0
 
-        # Compute the values here.
-        raise NotImplementedError()
+        # The states won't change, so we can get them before
+        states = self.mdp.getStates()
+
+        # First, we need to make sure that we make enough iterations
+        for i in range(self.iters):
+            # We need a tmp values dict because we wil use self.values in our computations
+            tmp = counter.Counter()
+
+            states = self.mdp.getStates()
+            for state in states:
+                value = self.__getBestActionAndValue(state)[1]
+                tmp[state] = 0 if value == - float("inf") else value
+
+            # Now that we computed everything, we can update the actual values
+            for state in states:
+                self.values[state] = tmp[state]
 
     def getValue(self, state):
         """
@@ -55,3 +69,66 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
 
         return self.getPolicy(state)
+
+    def getPolicy(self, state):
+        """
+        returns the best action according to computed values.
+        """
+
+        return self.__getBestActionAndValue(state)[0]
+
+    def getQValue(self, currentState, action):
+        """
+        Returns the q-value of the (state, action) pair.
+        """
+
+        # We need to compute that: SUM(p(s', a) * (R(s, a, s') + lambda * V(s'))
+        # With:
+        # - s being the current state,
+        # - s' the next one,
+        # - p(s', a) the probability to go to s' by taking the action a
+        # - R(s, a, s') the reward to go to s' by taking the action a from s
+        # - lambda the discount rate
+        # - V(s') the value of the state s'
+
+        # list of (nextState, prob) that we have by taking <action> from <currentState>
+        transitions = self.mdp.getTransitionStatesAndProbs(currentState, action)
+        qValue = 0
+
+        for transition in transitions:
+            nextState, probability = transition[0], transition[1]
+
+            # We need to get R(s, a, s'):
+            reward = self.mdp.getReward(currentState, action, nextState)
+            # We already have lamda which is the discountRate
+            drate = self.discountRate
+            # And we already have V(s') by calling self.values[nextState]
+            v = self.values[nextState]
+
+            # Finally, we can compute the sum
+            qValue += probability * (reward + drate * v)
+
+        return qValue
+
+    def __getBestActionAndValue(self, state):
+        """
+        We will use this code multiple time, so we will use only one function to do so.
+        returns a pair of (best action, best value) from the state
+        It returns (None, - float("inf")) if we are in a terminal state
+        """
+
+        # We need to compute V(s) = (a)max(Q(s, a))
+        # In brief, we want the qValue for the best action
+
+        actions = self.mdp.getPossibleActions(state)
+        bestAction = None  # it will happen if we are in the terminal state
+        bestQValue = - float("inf")
+
+        for action in actions:
+            qValue = self.getQValue(state, action)
+
+            if qValue > bestQValue:
+                bestQValue = qValue
+                bestAction = action
+
+        return bestAction, bestQValue
