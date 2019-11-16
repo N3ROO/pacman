@@ -239,7 +239,7 @@ class ApproximateQAgent(PacmanQAgent):
         """
 
         weights = self.weights
-        features = self.featExtractor.getFeatures(self, state, action)
+        features = self.featExtractor().getFeatures(state, action)
 
         return weights * features
 
@@ -248,9 +248,7 @@ class ApproximateQAgent(PacmanQAgent):
         Should update your weights based on transition.
         """
 
-        # For *some* reason I need to put "self" as a first argument because otherwise it says that
-        # it misses one argument "action". I don't understand.
-        features = self.featExtractor.getFeatures(self, state, action)
+        features = self.featExtractor().getFeatures(state, action)
 
         for feature in features:
             # These computations are taken from the P3 instructions
