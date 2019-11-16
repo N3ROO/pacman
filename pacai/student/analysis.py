@@ -82,13 +82,17 @@ def question3e():
 
 def question6():
     """
-    [Enter a description of what you did here.]
+    If we decrease epsilon, the agent will go to best places, but he won't explore the new ones,
+    and that is an issue because he won't find the terminal state within 50 interations. And by
+    increasing epsilon, the agent will discover new places, but it will be so random that the
+    policy won't be optimal after 50 iterations. He may find the good path, but we won't have a
+    99% success rate.
     """
 
-    answerEpsilon = 0.3
-    answerLearningRate = 0.5
+    # answerEpsilon = 0.3
+    # answerLearningRate = 0.5
 
-    return answerEpsilon, answerLearningRate
+    return NOT_POSSIBLE
 
 if __name__ == '__main__':
     questions = [
