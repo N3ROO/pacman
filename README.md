@@ -6,10 +6,10 @@ Updated by Lilian Gallon for the CSE140 class at UCSC. Files updated:
 - [pacai/student/search.py](pacai/student/search.py)
 - [pacai/student/searchAgents.py](pacai/student/searchAgents.py)
 
-**Second assignement (waiting for the grade/25)**
+**Second assignement (25/25)**
 - [pacai/student/multiagents.py](pacai/student/multiagents.py)
 
-**Third assignement (waiting for the grade/30)**
+**Third assignement (30/30)**
 - [pacai/student/analysis.py](pacai/student/analysis.py)
 - [pacai/student/qlearningAgents.py](pacai/student/qlearningAgents.py)
 - [pacai/student/valueIterationAgent.py](pacai/student/valueIterationAgent.py)
